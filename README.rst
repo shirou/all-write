@@ -51,15 +51,15 @@ Requirement
 How to try
 ~~~~~~~~~~~~~
 
-- 1. Get slim3 blank zip file
-- 2. unzip it 
-- 3. Get Lucene jar files and set to war/WEB-INF/lib
--- lib/lucene-core
--- contrib/contrib/analyzers/common/lucene-analyzers-3.0.2
-- 4. git clone this project
-- 5. import directory to new project
-- 6. deploy
-- 7. enjoy!
+1. Get slim3 blank zip file
+2. unzip it 
+3. Get Lucene jar files and set to war/WEB-INF/lib
+  - lib/lucene-core
+  - contrib/contrib/analyzers/common/lucene-analyzers-3.0.2
+4. git clone this project
+5. import directory to new project
+6. deploy
+7. enjoy!
 
 Note: I have not try this direction, sorry. It can run, might be...
 
@@ -143,9 +143,9 @@ Datastore is too slow like 5000msec.
 
 To reduce that time, I use these methods.
 
-- 1. use batch get
-- 2. reduce index size to reduce the number of entity
--- Lucene Document has only id 
+- use batch get
+- reduce index size to reduce the number of entity
+  - Lucene Document has only id 
 
 Then reduce the time to 2000msec but still slow.
 
