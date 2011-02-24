@@ -56,9 +56,21 @@ public class SearchService {
     
     public Object[] getIndexes(UserInfo user){
         Map<Object, Object> map = Memcache.getAll(user.getIndexes());
-        return map.values().toArray();
         
-        //return Datastore.get(i,user.getIndexes());
+        if (map.size() < user.getIndexes().size()){
+            // some indexes are out of Memcache.
+            List<Index> idxList = Datastore.get(i,user.getIndexes());
+            
+            for(Index idx: idxList){
+                if (! map.containsValue(idx)){
+                    Memcache.put(idx.getKey(), idx); // put to Memcache
+                }
+            }
+            
+            return idxList.toArray();
+        }else{
+            return map.values().toArray();
+        }
     }
     
     
