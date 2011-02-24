@@ -18,6 +18,7 @@ import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.store.SingleInstanceLockFactory;
 import org.slim3.datastore.Datastore;
+import org.slim3.memcache.Memcache;
 
 import util.NGramAnalyzer;
 import util.NotAuthorizedException;
@@ -105,7 +106,9 @@ public class NoteService {
         Datastore.put(note);
         Datastore.put(index);
         tx.commit();
-
+        
+        Memcache.put(index.getKey(), index);
+        
         return note;
     }
 
@@ -164,6 +167,8 @@ public class NoteService {
         Datastore.put(index);
         tx.commit();
         
+        Memcache.put(index.getKey(), index);
+
 //        log.info("create new note success. : " + email);   
 
         return note;

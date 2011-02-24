@@ -1,6 +1,6 @@
 package allwrite.meta;
 
-//@javax.annotation.Generated(value = { "slim3-gen", "@VERSION@" }, date = "2010-09-14 01:07:39")
+//@javax.annotation.Generated(value = { "slim3-gen", "@VERSION@" }, date = "2011-02-05 00:49:18")
 /** */
 public final class IndexMeta extends org.slim3.datastore.ModelMeta<allwrite.model.Index> {
 

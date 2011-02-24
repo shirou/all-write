@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
@@ -21,6 +23,7 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.WildcardQuery;
 import org.apache.lucene.util.Version;
 import org.mortbay.log.Log;
+import org.slim3.memcache.Memcache;
 import org.slim3.datastore.Datastore;
 import org.slim3.datastore.EntityNotFoundRuntimeException;
 
@@ -29,6 +32,7 @@ import util.NotAuthorizedException;
 
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
+import com.google.appengine.api.memcache.MemcacheServicePb.MemcacheGetRequest;
 
 import allwrite.model.Index;
 import allwrite.model.Note;
@@ -50,6 +54,14 @@ public class SearchService {
         return query;
     }
     
+    public Object[] getIndexes(UserInfo user){
+        Map<Object, Object> map = Memcache.getAll(user.getIndexes());
+        return map.values().toArray();
+        
+        //return Datastore.get(i,user.getIndexes());
+    }
+    
+    
     public List<Map<String, String>> Search(Map<String, Object> input) throws CorruptIndexException, IOException, ClassNotFoundException, ParseException, NotAuthorizedException {
         String email = (String)input.get("email");
         String token = (String)input.get("auth");
@@ -63,20 +75,24 @@ public class SearchService {
         }
 
         // get indexes.
-        List<Index> result = new ArrayList<Index>();
-        result =  Datastore.get(i,user.getIndexes());
+        Object[] result = getIndexes(user);
 //        log.info("Search get Indexes:" + (System.currentTimeMillis() - start));
         
         // create a MultiReader from indexes.        
-        IndexReader[] idxReaders = new IndexReader[result.size()];
+        IndexReader[] idxReaders = new IndexReader[result.length];
         int c=0;
-        if (result.size() == 0){
+        if (result.length == 0){
             return null;
         }
-        for(Index idx: result){
-            IndexReader r = IndexReader.open(idx.getIndex(),  true); // create Read only indexreader.
-            idxReaders[c] = r;
-            c++;
+        for(Object iO: result){
+            try{
+                Index idx = (Index)iO;
+                IndexReader r = IndexReader.open(idx.getIndex(),  true); // create Read only indexreader.
+                idxReaders[c] = r;
+                c++;
+            }catch(ClassCastException e){
+                continue; // just skip
+            }
         }
 //        log.info("Search get multiple index:"  + (System.currentTimeMillis() - start));
         
@@ -85,13 +101,16 @@ public class SearchService {
 //        log.info("Search get MultiReader:"  + (System.currentTimeMillis() - start));
         
         Query query;
+        String q;
         if (input.containsKey("schedule")){
-            Term term = new Term("text", "[????-??-??]");
-            query = new WildcardQuery(term);
+            q = "\\[????\\-??\\-??\\]";
+            Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_CURRENT);
+            query = new QueryParser(Version.LUCENE_CURRENT, "text", analyzer).parse(q);
         }else{
-            String q = (String)input.get("q");
+            q = (String)input.get("q");
             query = new QueryParser(Version.LUCENE_CURRENT, "text", new NGramAnalyzerForQuery(1,3)).parse(q);
         }
+        
 
         System.out.println("Query:" + query.toString());
 //        log.info("Search start:" + (System.currentTimeMillis() - start));
